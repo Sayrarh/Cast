@@ -41,7 +41,6 @@ contract Cast {
     error NotWhitelisted();
     error Voted();
     error Registered(string);
-    error Notfunded(string);
     error NotUpcomingAdmin();
 
     constructor() {
@@ -188,14 +187,6 @@ contract Cast {
         upcomingAdmin = address(0); //update
     }
 
-    /// @dev function to transfer out contract ether
-    function transferETH(address to) external payable {
-        onlyAdmin();
-        require(msg.value <= address(this).balance, "Insufficient ETH");
-        (bool sent, ) = to.call{value: msg.value}("");
-        require(sent, "Txn failed");
-    }
-
     //return total vote for each contender
     function contenderCastCount(uint16 ID) external view returns (uint16) {
         ContenderData storage CD = _contenderInfo[ID];
@@ -223,14 +214,9 @@ contract Cast {
         return voters;
     }
 
-    function getContractBalance() external view returns (uint256) {
-        return address(this).balance;
-    }
-
     /// @dev This is a private function used to allow only an admin call a function
     function onlyAdmin() private view {
         require(msg.sender == admin, "Not admin");
     }
 
-    receive() external payable {}
 }
