@@ -40,6 +40,7 @@ contract Cast {
     //////////////////////////ERRORS//////////////////////////
     error NotWhitelisted();
     error Voted();
+    error Registration(string);
     error Registered(string);
     error NotUpcomingAdmin();
 
@@ -106,18 +107,21 @@ contract Cast {
 
     /// @notice this function is used to cast vote for contenders
     function castVote(uint16 _contenderID) external {
-        require(block.timestamp > regDuration, "Cont. Reg ongoing");
-        require(block.timestamp <= castDuration, "Cast ended");
+        if(block.timestamp < regDuration){
+            revert Registration("Contended Registration Ongoing");
+        }
+        require(block.timestamp <= castDuration, "Voting ended");
         require(
             _contenderID > 0 && _contenderID <= castID,
             "Invalid contender ID"
         );
 
-        ContenderData storage CD = _contenderInfo[_contenderID];
-
         if (hasVoted[msg.sender] == true) {
             revert Voted();
         }
+
+        ContenderData storage CD = _contenderInfo[_contenderID];
+
         CD.castCount = CD.castCount + 1;
 
         hasVoted[msg.sender] = true;
