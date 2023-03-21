@@ -11,14 +11,16 @@ contract Cast {
     event RegistrationEvent(address indexed contender);
     event CastEvent(address indexed user);
 
+
     ////////////////////STATE VARIABLES///////////////////////
     address MLOOTAddr = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
-    uint32 castDuration;
-    uint16 castID = 1;
-    bool initializeState;
-
+    uint32 public castDuration;
+    uint8 castID = 1;
+    bool public initializeState;
+ 
     address admin;
-    uint32 regDuration; //duration time open for contenders to sign up
+    uint32 public regDuration; //duration time open for contenders to sign up
+    string public title;
     mapping(address => bool) hasVoted;
     mapping(address => bool) hasRegistered;
 
@@ -32,31 +34,46 @@ contract Cast {
 
     struct ContenderData {
         address contenderAddr;
-        uint16 castCount;
+        uint32 castCount;
     }
 
-    mapping(uint16 => ContenderData) _contenderInfo;
+    mapping(uint8 => ContenderData) _contenderInfo;
+
 
     //////////////////////////ERRORS//////////////////////////
+    
     error NotWhitelisted();
     error Voted();
     error Registration(string);
     error Registered(string);
     error NotUpcomingAdmin();
+    error StateNotInitialised();
+    error ContractAlreadyInitialized();
+    error NotAdmin();
+    error VoteEnded();
+    error ContenderRegistrationClosed();
+    error NotAnMLOOTHolder();
+    error InvalidContenderID();
+    error CastStillInProgress();
+    error NoContenderOrVoters();
+    error ContractNotInitialized();
 
-    constructor() {
-        admin = msg.sender;
-    }
 
     /// @notice this function would be setting the merkle root and all that is needed for validation
-    function setCast(
+    function initialize(
         bytes32 root,
         uint32 _castDuration,
-        uint32 _regDuration
+        uint32 _regDuration,
+        string memory _title,
+        address _admin
     ) external {
-        onlyAdmin();
-        require(!initializeState, "Cast ongoing");
+        if(initializeState == true){
+            revert ContractAlreadyInitialized();
+        }
+
         rootHash = root;
+        admin = _admin;
+        title = _title;
         castDuration = uint32(block.timestamp + (_castDuration * (1 days)));
         regDuration = uint32(block.timestamp + (_regDuration * (1 days)));
         initializeState = true;
@@ -70,22 +87,27 @@ contract Cast {
         return MerkleProof.verify(proof, rootHash, leaf);
     }
 
+
     /// @notice This is the function responsible for registering contenders
     // contender must possess MLOOT NFT to be eligible
 
-    function registration(bytes32[] memory proof) external returns (uint16) {
-        require(initializeState == true, "State not initialized");
-        //check if msg.sender is whitelisted
-      
-        require(block.timestamp <= regDuration, "Registration Closed");
-        require(
-            MLOOT(MLOOTAddr).balanceOf(msg.sender) > 0,
-            "Insufficient balance"
-        );
+    function contenderRegistration(bytes32[] memory proof) external returns (uint8) {
+        if(initializeState){
+            revert StateNotInitialised(); 
+        }
+        
+        if(block.timestamp > regDuration){
+            revert ContenderRegistrationClosed();
+        }
+
+        if( MLOOT(MLOOTAddr).balanceOf(msg.sender) == 0){
+            revert NotAnMLOOTHolder();
+        }
         
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
 
         bool prove = isWhitelisted(proof, leaf);
+        //check if msg.sender is whitelisted
         if (!prove) {
             revert NotWhitelisted();
         }
@@ -97,7 +119,7 @@ contract Cast {
 
         CD.contenderAddr = msg.sender;
         contenders.push(msg.sender);
-        uint16 currentCastID = castID;
+        uint8 currentCastID = castID;
         hasRegistered[msg.sender] = true;
         castID = castID + 1;
 
@@ -106,15 +128,18 @@ contract Cast {
     }
 
     /// @notice this function is used to cast vote for contenders
-    function castVote(uint16 _contenderID) external {
+    function castVote(uint8 _contenderID) external {
         if(block.timestamp < regDuration){
             revert Registration("Contended Registration Ongoing");
         }
-        require(block.timestamp <= castDuration, "Voting ended");
-        require(
-            _contenderID > 0 && _contenderID <= castID,
-            "Invalid contender ID"
-        );
+
+        if(block.timestamp > castDuration){
+            revert VoteEnded();
+        }
+
+        if(_contenderID <= 0 && _contenderID > castID){
+            revert InvalidContenderID();
+        }
 
         if (hasVoted[msg.sender] == true) {
             revert Voted();
@@ -133,19 +158,26 @@ contract Cast {
 
     /// @notice this function is used to reveal the winner
     // only admin can reveal winner after cast duration has elapsed
-    function revealCastWinner() external returns(address) {
+    function endCastSession() external returns(ContenderData memory) {
         onlyAdmin();
-        require(block.timestamp >= castDuration, "Not time");
-        require(
-            contenders.length > 0 && voters.length > 0,
-            "No contenders or voters"
-        );
+        
+        if(initializeState) {
+            revert ContractNotInitialized();
+        }
 
+        if(block.timestamp < castDuration){
+            revert CastStillInProgress();
+        }
+        
+        if(contenders.length == 0 && voters.length == 0){
+            revert NoContenderOrVoters();
+        }
+        
         // Find the contender with the highest number of votes
-        uint16 winnerID;
-        uint16 maxVotes;
+        uint8 winnerID;
+        uint32 maxVotes;
 
-        for (uint16 i = 1; i < castID; i++) {
+        for (uint8 i = 1; i < castID; i++) {
             ContenderData storage CD = _contenderInfo[i];
             if (CD.castCount > maxVotes) {
                 winnerID = i;
@@ -156,9 +188,9 @@ contract Cast {
         // Make sure there is at least one vote cast
         require(maxVotes > 0, "No votes cast");
         address winnerAddr = _contenderInfo[winnerID].contenderAddr;
-
+       
         // // Reset all state variables
-        // initializeState = false;
+        initializeState = false;
         // regDuration = 0;
         // castDuration = 0;
         // rootHash = 0;
@@ -171,8 +203,10 @@ contract Cast {
         // }
 
         emit CastEvent(winnerAddr);
-        return winnerAddr;
+        return  ContenderData(winnerAddr, maxVotes);
+
     }
+
 
     ///@dev This function is used to assign upcoming admin role
     // to avoid accidentally transferring ownership to the wrong address
@@ -191,24 +225,17 @@ contract Cast {
         upcomingAdmin = address(0); //update
     }
 
-    //return total vote for each contender
-    function contenderCastCount(uint16 ID) external view returns (uint16) {
-        ContenderData storage CD = _contenderInfo[ID];
-        return CD.castCount;
+    /// @dev function to return each contenders' cast details
+    function contenderCastCount(uint8 ID) external view returns (ContenderData memory) {
+        return _contenderInfo[ID];
     }
 
-    // @dev function returns cast count of a particular contender
-    function getContenderCastCount(uint16 _id) external view returns (uint16) {
-        ContenderData storage cd = _contenderInfo[_id];
-        return cd.castCount;
+    /// @dev function to return platform total vote count
+    function totalVoteCount() external view returns (uint32) {
+        return uint32(voters.length);
     }
 
-    //return total vote count
-    function totalCastCount() external view returns (uint16) {
-        return uint16(voters.length);
-    }
-
-    /// @dev function return all contenders
+    /// @dev function to return all contenders
     function allContenders() external view returns (address[] memory) {
         return contenders;
     }
@@ -220,7 +247,9 @@ contract Cast {
 
     /// @dev This is a private function used to allow only an admin call a function
     function onlyAdmin() private view {
-        require(msg.sender == admin, "Not admin");
+        if(msg.sender != admin){
+            revert NotAdmin();
+        }
     }
 
 }

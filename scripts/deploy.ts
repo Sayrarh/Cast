@@ -19,19 +19,24 @@ async function main() {
     params: [claimer]
   });
 
-  
-  const signer = await ethers.getSigner(claimer)
-  console.log("signer: ", signer.address)
-
-  await helpers.setBalance(signer.address, 100n ** 18n);
-
-
   //////////////////DEPLOYING CAST CONTRACT///////////////////
   const CastContract = await ethers.getContractFactory("Cast");
   const cast = await CastContract.deploy();
   await cast.deployed();
   console.log(`Cast contract is deployed to ${cast.address}`);
 
+
+  ////////////////DEPLOYING MINIMAL PROXY FACTORY///////////////
+  const MinimalProxy = await ethers.getContractFactory("MinimalProxyFactory");
+  const minimalProxy = await MinimalProxy.deploy();
+
+  // const signer = await ethers.getSigner(claimer)
+  // console.log("signer: ", signer.address)
+
+  // await helpers.setBalance(signer.address, 100n ** 18n);
+
+
+  
 
 
 }
