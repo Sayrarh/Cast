@@ -26,7 +26,7 @@ contract Cast {
 
     address upcomingAdmin;
 
-    bytes32 rootHash = 0xf3479c7335f169adbf330622ca8a11b3befa654cf27a40ae851a22347e6fe232;
+    bytes32 rootHash;
 
    
     address[] private voters;
@@ -160,7 +160,7 @@ contract Cast {
     // only admin can reveal winner after cast duration has elapsed
     function endCastSession() external returns(ContenderData memory) {
         onlyAdmin();
-        
+
         if(initializeState) {
             revert ContractNotInitialized();
         }

@@ -5,32 +5,42 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 
 
 contract MinimalProxyFactory{
+    event CloneCreated();
+
     mapping(uint256 => address) public cloneAddresses;
 
     address implementation;
-    uint256 contract_index;
+    uint256 contractIndex = 1;
 
-    // setting implementation contract address
+
+    // setting the implementation contract address
     constructor(address _implementation) {
         implementation = _implementation;
     }
 
-    event Created();
 
-    function create(
+    function createClone(
         bytes32 root,
         uint32 _castDuration,
         uint32 _regDuration,
         string memory _title,
         address _admin
-    ) public {
-        bytes32 salt = keccak256(abi.encodePacked(block.timestamp, _title));
-        address pair = Clones.cloneDeterministic(implementation, salt);
-        ICast(pair).initialize(root, _castDuration, _regDuration, _title, _admin);
-        emit Created();
+    ) external returns(address){
+        bytes32 salt = keccak256(abi.encodePacked(block.timestamp, contractIndex));
+        address proxy = Clones.cloneDeterministic(implementation, salt);
+        ICast(proxy).initialize(root, _castDuration, _regDuration, _title, _admin);
+
+
+        cloneAddresses[contractIndex] = proxy;
+
+        contractIndex++;
+
+        emit CloneCreated();
+
+        return proxy;
     }
 
-    function returnContractList() public view returns(uint256 ) {
-        return contract_index;
+    function returnClonedContractLength() external view returns(uint256) {
+        return contractIndex;
     }
 }
