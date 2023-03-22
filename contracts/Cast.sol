@@ -18,7 +18,7 @@ contract Cast {
     uint8 castID = 1;
     bool public initializeState;
  
-    address admin;
+    address public admin;
     uint32 public regDuration; //duration time open for contenders to sign up
     string public title;
     mapping(address => bool) hasVoted;
@@ -226,7 +226,7 @@ contract Cast {
     }
 
     /// @dev function to return each contenders' cast details
-    function contenderCastCount(uint8 ID) external view returns (ContenderData memory) {
+    function contenderDetails(uint8 ID) external view returns (ContenderData memory) {
         return _contenderInfo[ID];
     }
 
