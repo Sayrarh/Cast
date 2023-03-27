@@ -44,8 +44,8 @@ contract Cast {
     
     error NotWhitelisted();
     error Voted();
-    error Registration(string);
-    error Registered(string);
+    error ContenderRegistrationOngoing();
+    error CanNotRegisterTwice();
     error NotUpcomingAdmin();
     error StateNotInitialised();
     error ContractAlreadyInitialized();
@@ -67,6 +67,7 @@ contract Cast {
         string memory _title,
         address _admin
     ) external {
+        //require(initializeState == false, "State already initialized");
         if(initializeState == true){
             revert ContractAlreadyInitialized();
         }
@@ -74,8 +75,8 @@ contract Cast {
         rootHash = root;
         admin = _admin;
         title = _title;
-        castDuration = uint32(block.timestamp + (_castDuration * (1 days)));
-        regDuration = uint32(block.timestamp + (_regDuration * (1 days)));
+        castDuration = uint32(block.timestamp + (_castDuration ));
+        regDuration = uint32(block.timestamp + (_regDuration));
         initializeState = true;
     }
 
@@ -92,7 +93,7 @@ contract Cast {
     // contender must possess MLOOT NFT to be eligible
 
     function contenderRegistration(bytes32[] memory proof) external returns (uint8) {
-        if(initializeState){
+        if(initializeState == false){
             revert StateNotInitialised(); 
         }
         
@@ -114,7 +115,7 @@ contract Cast {
 
         ContenderData storage CD = _contenderInfo[castID];
         if (hasRegistered[msg.sender] == true) {
-            revert Registered("Can't register twice");
+            revert CanNotRegisterTwice();
         }
 
         CD.contenderAddr = msg.sender;
@@ -130,14 +131,14 @@ contract Cast {
     /// @notice this function is used to cast vote for contenders
     function castVote(uint8 _contenderID) external {
         if(block.timestamp < regDuration){
-            revert Registration("Contended Registration Ongoing");
+            revert ContenderRegistrationOngoing();
         }
 
         if(block.timestamp > castDuration){
             revert VoteEnded();
         }
 
-        if(_contenderID <= 0 && _contenderID > castID){
+        if(_contenderID == 0 || _contenderID > castID){
             revert InvalidContenderID();
         }
 
@@ -161,7 +162,7 @@ contract Cast {
     function endCastSession() external returns(ContenderData memory) {
         onlyAdmin();
 
-        if(initializeState) {
+        if(initializeState == false) {
             revert ContractNotInitialized();
         }
 
@@ -244,6 +245,7 @@ contract Cast {
     function allVoters() external view returns (address[] memory) {
         return voters;
     }
+ 
 
     /// @dev This is a private function used to allow only an admin call a function
     function onlyAdmin() private view {

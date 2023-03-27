@@ -1,15 +1,24 @@
 import {ethers} from "hardhat";
+const helpers = require("@nomicfoundation/hardhat-network-helpers");
 const merkle = require("../gen_files/MerkleProof.json");
 const userDetails = require("../gen_files/Whitelist.json")
 
 
 async function main(){
-    //Minimal Proxy Factory is deployed to 0xA1645A8D039D39AC1Ae9569b2D8B80C3e13D66f2
-    const CastAddress = "0xaa7812Ce3576164E0E59379F652bE3a06DBebBAf";
+    //Minimal Proxy Factory is deployed to 0x9b86eF8Df1f4A49333520a8CFe6DA6890ec58da4
+    //Here is the Cloned Address 0xB1f4Aa2e43C361e47B59D60AbFE63ADC88661470
+    const CastAddress = "0xAe0bD3911cA827ACb4F6Ada31F2AEf2d3a01cDFB";
     const rootHash = "0xf3479c7335f169adbf330622ca8a11b3befa654cf27a40ae851a22347e6fe232";
 
+    //Holder of More Loot NFT
+    const contender1 = "0x82bc5DA21d007B6Ac5ae5dE1eb85149C8c9A1430";
+
+    await helpers.impersonateAccount(contender1);
+    const impersonatedSigner = await ethers.getSigner(contender1);
+
     const AdminAddr = "0x637CcDeBB20f849C0AA1654DEe62B552a058EA87";
-    const UpcomingAdmin = "0x637CcDeBB20f849C0AA1654DEe62B552a058EA87";
+    const UpcomingAdmin = "0xAEB9219D416D28f2EADB0A6C414E2776Fd9CD879";
+    const user = "0xfb9Aa24caF3b9fb9F758347AC2496157EA683BE7";
     
     const claimer = Object.keys(userDetails)[1]
     const proof = merkle[claimer].proof;
@@ -22,22 +31,24 @@ async function main(){
 
     console.log("Contract Initialization receipt", initializeTxnReceipt);
 
+
     //check if state has been initialized
     const state = await Cast.initializeState();
     console.log("Contract Initial State is", state );
 
+
     //contender registration process
-    const ContenderRegistration = await Cast.contenderRegistration(proof);
+    const ContenderRegistration = await Cast.connect(impersonatedSigner).contenderRegistration(proof);
     const contenderTxnReceipt = await ContenderRegistration.wait();
 
     console.log("Registration process:", contenderTxnReceipt);
 
 
-    //casting vote 
-    // const VoteCast = await Cast.castVote(1);
-    // const castTxnReceipt = await VoteCast.wait();
+    // casting vote 
+    const VoteCast = await Cast.castVote(1);
+    const castTxnReceipt = await VoteCast.wait();
 
-    // console.log("Registration process:", castTxnReceipt);
+    console.log("Registration process:", castTxnReceipt);
 
 
     //End Cast Session

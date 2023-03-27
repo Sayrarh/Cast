@@ -17,6 +17,7 @@
     "csv-parser": "^3.0.0",
     "dotenv": "^16.0.3",
     "keccak256": "^1.0.6",
-    "merkletreejs": "^0.3.9"
+    "merkletreejs": "^0.3.9",
+    "mocha": "^10.2.0"
   }
 }
