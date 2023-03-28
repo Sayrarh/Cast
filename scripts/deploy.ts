@@ -13,13 +13,8 @@ async function main() {
 
   console.log(claimer, proof);
 
-
-  // await hre.network.provider.request({
-  //   method: "hardhat_impersonateAccount",
-  //   params: [claimer]
-  // });
-
   const AdminAddr = "0x637CcDeBB20f849C0AA1654DEe62B552a058EA87";
+
 
   ////////////DEPLOYING THE IMPLEMENTATION CONTRACT/////////////
   const CastContract = await ethers.getContractFactory("Cast");
@@ -36,12 +31,15 @@ async function main() {
 
   console.log(`Minimal Proxy Factory is deployed to ${minimalProxy.address}`)
 
+
   //////////DEPLOYING A CLONE OF THE CAST CONTRACT/////////
   //call the createClone function on the Minimal factory contract and input the necessary parameters
-  const rootHash = "0xf3479c7335f169adbf330622ca8a11b3befa654cf27a40ae851a22347e6fe232";
- 
+  const rootHash = "0x9473131384768d56d700f0556811b9dae298090151cc14eeac5211a7811b1f2c";
+  const regDuration = Math.floor(Date.now() / 1000) + 60 * 15;
+  const castDuration = Math.floor(Date.now() / 1000) + 60 * 100;
 
-  const createCastClone = await minimalProxy.createClone(rootHash, 100, 40, "President", AdminAddr);
+
+  const createCastClone = await minimalProxy.createClone(rootHash, castDuration, regDuration, "President", AdminAddr);
   const castCloneTxn = await createCastClone.wait();
   console.log("Clone Contract Transaction Receipt", castCloneTxn);
 
@@ -55,11 +53,6 @@ async function main() {
   const allCastClones = await minimalProxy.returnClonedContractLength();
   console.log("Number of created cast clone contract is", allCastClones);
 
-
-  // const signer = await ethers.getSigner(claimer)
-  // console.log("signer: ", signer.address)
-
-  // await helpers.setBalance(signer.address, 100n ** 18n);
 
 }
 

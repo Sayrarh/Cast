@@ -284,15 +284,10 @@ describe("Cast", function () {
                 const setNewAdmin = await cast.connect(admin).setUpcomingAdmin(upcomingadmin.address);
                 await setNewAdmin.wait();
 
-                console.log("Old Admin",admin.address); //0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-
-                console.log("Upcoming Admin",upcomingadmin.address);
-
+               
                 await expect ((await cast.connect(upcomingadmin).acceptAdministration())).not.to.be.reverted;
                 
-                console.log("New Admin", admin.address);
-                console.log("Upcoming Admin",upcomingadmin.address);
-
+               
             })
            
         })

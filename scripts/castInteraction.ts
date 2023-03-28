@@ -5,12 +5,15 @@ const userDetails = require("../gen_files/Whitelist.json");
 
 
 async function main(){
-    //Minimal Proxy Factory is deployed to 0x9b86eF8Df1f4A49333520a8CFe6DA6890ec58da4
-    //Here is the Cloned Address 0xB1f4Aa2e43C361e47B59D60AbFE63ADC88661470
-    const CastAddress = "0xAe0bD3911cA827ACb4F6Ada31F2AEf2d3a01cDFB";
-    const rootHash = "0xf3479c7335f169adbf330622ca8a11b3befa654cf27a40ae851a22347e6fe232";
+  //Cast contract is deployed to 0xDcB8808Cd50FA71E0A4dDFbadc1A207e10422A0E
+  //Minimal Proxy Factory is deployed to 0x720BEA2312428EE6E8b66547A7509aE866C9a83B
+  //Cloned Address 0xe38AA22505dBA76450F4fD055C296A23a2Fdc0Da
 
-    const [owner, otherAccounts, acc1, acc2, acc3, acc4, acc5, acc6, acc7, acc8, acc9, acc10] = await ethers.getSigners();
+    const CastAddress = "0x89372b32b8AF3F1272e2efb3088616318D2834cA";
+    const rootHash = "0x9473131384768d56d700f0556811b9dae298090151cc14eeac5211a7811b1f2c";
+
+    const [admin, UpcomingAdmin, acc1, acc2, acc3, acc4, acc5, acc6, acc7, acc8, acc9, acc10] = await ethers.getSigners();
+    
     //Generating the addresses
     console.log(acc1.address);
     console.log(acc2.address);
@@ -29,79 +32,81 @@ async function main(){
     await helpers.impersonateAccount(contender1);
     const impersonatedSigner = await ethers.getSigner(contender1);
 
-    const AdminAddr = "0x637CcDeBB20f849C0AA1654DEe62B552a058EA87";
-    const UpcomingAdmin = "0xAEB9219D416D28f2EADB0A6C414E2776Fd9CD879";
-    const user = "0xfb9Aa24caF3b9fb9F758347AC2496157EA683BE7";
+
     
-    const claimer = Object.keys(userDetails)[1]
+    const claimer = Object.keys(userDetails)[10]
     const proof = merkle[claimer].proof;
 
     const Cast = await ethers.getContractAt("Cast", CastAddress);
 
-    // //try initializing the contract
-    // const InitializeContract = await Cast.initialize(rootHash, 300, 150, "President", AdminAddr);
-    // const initializeTxnReceipt = await InitializeContract.wait();
-
-    // console.log("Contract Initialization receipt", initializeTxnReceipt);
+    const regDuration = Math.floor(Date.now() / 1000) + 60 * 1;
+    const castDuration = Math.floor(Date.now() / 1000) + 60 * 2;
 
 
-    // //check if state has been initialized
-    // const state = await Cast.initializeState();
-    // console.log("Contract Initial State is", state );
+    //try initializing the contract
+    const InitializeContract = await Cast.connect(admin).initialize(rootHash, castDuration, regDuration, "President", admin.address);
+    const initializeTxnReceipt = await InitializeContract.wait();
+
+    console.log("Contract Initialization receipt", initializeTxnReceipt);
 
 
-    // // //contender registration process
-    // // const ContenderRegistration = await Cast.connect(impersonatedSigner).contenderRegistration(proof);
-    // // const contenderTxnReceipt = await ContenderRegistration.wait();
-
-    // // console.log("Registration process:", contenderTxnReceipt);
+    //check if state has been initialized
+    const state = await Cast.initializeState();
+    console.log("Contract Initial State is", state );
 
 
-    // // // casting vote 
-    // // const VoteCast = await Cast.castVote(1);
-    // // const castTxnReceipt = await VoteCast.wait();
+    //contender registration process
+    const ContenderRegistration = await Cast.connect(impersonatedSigner).contenderRegistration(proof);
+    const contenderTxnReceipt = await ContenderRegistration.wait();
 
-    // // console.log("Registration process:", castTxnReceipt);
-
-
-    // // //End Cast Session
-    // // const endCast = await Cast.endCastSession();
-    // // const endTxnReceipt = await endCast.wait();
-
-    // // console.log("End Cast Session", endTxnReceipt);
+    console.log("Registration process:", contenderTxnReceipt);
 
 
-    // //Change admin
-    // const AdminChange = await Cast.setUpcomingAdmin(UpcomingAdmin);
-    // const adminChangeTxnReceipt = await AdminChange.wait();
+    // casting vote 
+    const VoteCast = await Cast.connect(acc1).castVote(1);
+    const castTxnReceipt = await VoteCast.wait();
 
-    // console.log("Setting up Upcoming Admin Address", adminChangeTxnReceipt);
-
-    // //Upcoming admin to accept administration
-    // const AcceptAdmin = await Cast.acceptAdministration();
-    // const adminTxnReceipt = await AcceptAdmin.wait();
-
-    // console.log("Accept Administration", adminTxnReceipt);
+    console.log("Registration process:", castTxnReceipt);
 
 
-    // //Check Admin
-    // const Admin = await Cast.admin();
-    // console.log("Admin is", Admin);
+    //End Cast Session
+    const endCast = await Cast.connect(admin).endCastSession();
+    const endTxnReceipt = await endCast.wait();
+
+    console.log("End Cast Session", endTxnReceipt);
 
 
-    // //Check Registration duration
-    // const regDuration = await Cast.regDuration();
-    // console.log("Contender Registration duration is", regDuration);
+    //Change admin
+    const AdminChange = await Cast.connect(admin).setUpcomingAdmin(UpcomingAdmin.address);
+    const adminChangeTxnReceipt = await AdminChange.wait();
+
+    console.log("Setting up Upcoming Admin Address", adminChangeTxnReceipt);
+
+    //Upcoming admin to accept administration
+    const AcceptAdmin = await Cast.connect(UpcomingAdmin).acceptAdministration();
+    const adminTxnReceipt = await AcceptAdmin.wait();
+
+    console.log("Accept Administration", adminTxnReceipt);
 
 
-    //  //Check Registration duration
-    //  const castDuration = await Cast.castDuration();
-    //  console.log("Voting duration is", castDuration);
+    //Check Admin
+    const Admin = await Cast.admin();
+    console.log("Admin is", Admin);
 
 
-    //  //Get contender's cast details
-    //  const ContenderDetails = await Cast.contenderDetails(1);
-    //  console.log("Contender Information is", ContenderDetails);
+    //Check Registration duration
+    const contendRegDuration = await Cast.regDuration();
+    console.log("Contender Registration duration is", contendRegDuration);
+
+
+     //Check cast duration
+     const votecastDuration = await Cast.castDuration();
+     console.log("Voting duration is", votecastDuration);
+
+
+     //Get contender's cast details
+     const ContenderDetails = await Cast.contenderDetails(1);
+     console.log("Contender Information is", ContenderDetails);
 
 
 }

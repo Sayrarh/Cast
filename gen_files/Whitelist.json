@@ -29,6 +29,9 @@
     "0x71bE63f3384f5fb98995898A86B02Fb2426c5788": {
         "address": "0x71bE63f3384f5fb98995898A86B02Fb2426c5788"
     },
+    "0xf917D09402e9aeBEE8e11d27eB1eA4446A349c72": {
+        "address": "0xf917D09402e9aeBEE8e11d27eB1eA4446A349c72"
+    },
     "0x637CcDeBB20f849C0AA1654DEe62B552a058EA87": {
         "address": "0x637CcDeBB20f849C0AA1654DEe62B552a058EA87"
     },
@@ -36,6 +39,6 @@
         "address": "0xfb9Aa24caF3b9fb9F758347AC2496157EA683BE7"
     },
     "dropDetails": {
-        "merkleroot": "0x5784aafc1d0c772355c412047ea38fab0184048e7034cbc3383fdd596762caba"
+        "merkleroot": "0x9473131384768d56d700f0556811b9dae298090151cc14eeac5211a7811b1f2c"
     }
 }
