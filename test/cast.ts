@@ -167,17 +167,11 @@ describe("Cast", function () {
             it("Should revert if voting has already ended", async function(){
                 const { cast, admin, voter1, rootHash, merkleTree, impersonatedSigner} = await loadFixture(deployCastFixture);
                 
-                //const regDuration = Math.floor(Date.now() / 1000) + 60 * 5;
-                //const castDuration = Math.floor(Date.now() / 1000) + 60 * 10;
-
                 const contractState = await cast.connect(admin).initialize(rootHash, 0, 0, "President", admin.address);
                 await contractState.wait();
 
                 const leaf = keccak256(impersonatedSigner.address);
                 const proof = merkleTree.getHexProof(leaf);
-
-                // const contenderReg = await cast.connect(impersonatedSigner).contenderRegistration(proof);
-                // await contenderReg.wait();
 
                 await expect(cast.connect(voter1).castVote(1)).to.be.revertedWithCustomError(cast, "VoteEnded");
             })
@@ -226,10 +220,7 @@ describe("Cast", function () {
         describe("End Cast Session", function() {
             it("Should revert if caller is not admin", async function(){
                 const { cast, admin,user, voter1, rootHash, merkleTree, impersonatedSigner} = await loadFixture(deployCastFixture);
-                
-                // const regDuration = Math.floor(Date.now() / 1000) + 60 * 5;
-                // const castDuration = Math.floor(Date.now() / 1000) + 60 * 10;
-
+               
                 const contractState = await cast.connect(admin).initialize(rootHash, 4, 2, "President", admin.address);
                 await contractState.wait();
 
