@@ -9,5 +9,3 @@ In this project, I have different files for the Minimal Proxy Implementation;
 Anyone is good to go.
 
 
-
-
