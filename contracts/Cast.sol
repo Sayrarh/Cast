@@ -67,7 +67,7 @@ contract Cast {
         string memory _title,
         address _admin
     ) external {
-        //require(initializeState == false, "State already initialized");
+
         if(initializeState == true){
             revert ContractAlreadyInitialized();
         }

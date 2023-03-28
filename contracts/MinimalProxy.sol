@@ -2,10 +2,9 @@
 pragma solidity ^0.8.4;
 import "./ICast.sol";
 
-contract Minimal{
+contract MinimalProxy{
     event CloneCreated();
 
-    address[] public proxies;
     mapping(uint64 => address) cloneAddresses;
     uint64 public contractIndex = 1;
 
@@ -21,6 +20,7 @@ contract Minimal{
         bytes20 implementationContractInBytes = bytes20(
             _implementationContract
         );
+        
         //address to assign cloned proxy
         address proxy;
 
@@ -79,7 +79,6 @@ contract Minimal{
             proxy := create(0, clone, 0x37)
         }
         ICast(proxy).initialize(root, _castDuration, _regDuration, _title, _admin);
-        proxies.push(proxy);
 
         cloneAddresses[contractIndex] = proxy;
 

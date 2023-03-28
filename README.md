@@ -1,13 +1,13 @@
-# Sample Hardhat Project
+# Cast Project
+Cast is a platform designed for conducting elections. Only pre-approved addresses can participate as candidates, and they must also possess More LOOT NFT before they are eligible to run for candidacy. Users can then cast their vote for the candidate of their preference. This project leverages Minimal Proxy to replicate the Cast contract.
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+In this project, I have different files for the Minimal Proxy Implementation;
+1. Minimal Proxy Inline Assembly Implementation: demonstrates the use of Minimal Proxy to clone the cast smart contract using inline assembly in solidity.
 
-Try running some of the following tasks:
+2. Minimal Proxy Using OpenZeppelin Implementation: demonstrates the use of Minimal Proxy to clone the cast smart contract.
+<br/>
+Anyone is good to go.
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+
+
+

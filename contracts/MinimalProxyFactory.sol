@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 contract MinimalProxyFactory{
     event CloneCreated();
 
-    mapping(uint256 => address) public cloneAddresses;
+    mapping(uint64 => address) public cloneAddresses;
 
     address implementation;
-    uint256 contractIndex = 1;
+    uint64 contractIndex = 1;
 
 
     // setting the implementation contract address
@@ -40,7 +40,7 @@ contract MinimalProxyFactory{
         return proxy;
     }
 
-    function returnClonedContractLength() external view returns(uint256) {
+    function returnClonedContractLength() external view returns(uint64) {
         return contractIndex;
     }
 }
